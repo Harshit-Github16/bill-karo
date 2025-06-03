@@ -23,9 +23,14 @@ export default NextAuth({
       }
     })
   ],
-  secret: process.env.NEXTAUTH_SECRET || "NEXTAUTH_SECRET",
+  secret: process.env.NEXTAUTH_SECRET,
+  session: {
+    strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
   pages: {
-    signIn: '/login'
+    signIn: '/login',
+    error: '/auth/error',
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -39,6 +44,9 @@ export default NextAuth({
         session.user.role = token.role;
       }
       return session;
+    },
+    async redirect() {
+      return '/dashboard'
     }
   }
 }); 

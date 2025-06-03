@@ -16,8 +16,12 @@ export default function Login() {
   const router = useRouter();
 
   useEffect(() => {
+    // Remove callback URL if present
+    if (router.query.callbackUrl) {
+      router.replace('/login', undefined, { shallow: true });
+    }
+    
     if (status === 'loading') return;
-
     if (session) {
       router.replace('/dashboard');
     }
@@ -46,13 +50,13 @@ export default function Login() {
       const result = await signIn('credentials', {
         username: credentials.username,
         password: credentials.password,
-        redirect: false,
+        redirect: false
       });
 
       if (result.error) {
         setError('Invalid username or password. Try using the demo account below.');
       } else {
-        router.push('/dashboard');
+        router.replace('/dashboard');
       }
     } catch (error) {
       setError('An error occurred. Please try again or use the demo account.');
@@ -69,13 +73,13 @@ export default function Login() {
       const result = await signIn('credentials', {
         username: 'demo123',
         password: 'demo123',
-        redirect: false,
+        redirect: false
       });
 
       if (result.error) {
         setError('Demo login failed. Please try again or contact support.');
       } else {
-        router.push('/dashboard');
+        router.replace('/dashboard');
       }
     } catch (error) {
       setError('An error occurred with demo login. Please try again.');
