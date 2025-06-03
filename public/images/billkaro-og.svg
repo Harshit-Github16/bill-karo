@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#F8FAFC"/>
+  <rect x="480" y="215" width="80" height="80" rx="16" fill="#1D4ED8"/>
+  <path d="M504 255C504 246.163 511.163 239 520 239C528.837 239 536 246.163 536 255C536 263.837 528.837 271 520 271" stroke="white" strokeWidth="6" strokeLinecap="round"/>
+  <path d="M520 239V255H536" stroke="white" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"/>
+  <text x="580" y="275" font-size="48" font-weight="bold" fill="#1E293B" font-family="system-ui, -apple-system, sans-serif">BillKaro</text>
+  <text x="480" y="350" font-size="24" fill="#64748B" font-family="system-ui, -apple-system, sans-serif">Smart Financial Management Platform</text>
+</svg> 
