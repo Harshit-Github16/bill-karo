@@ -1,154 +1,188 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import Input from '../components/Input';
-import Head from 'next/head';
+import { useState, useEffect } from 'react';
+import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
+import Head from 'next/head';
+import Image from 'next/image';
 
 export default function Login() {
-  const router = useRouter();
-  const [formData, setFormData] = useState({
-    email: '',
+  const { data: session, status } = useSession();
+  const [credentials, setCredentials] = useState({
+    username: '',
     password: '',
   });
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-    // Clear any previous error when user starts typing
-    if (error) setError('');
-  };
+  useEffect(() => {
+    if (status === 'loading') return;
+
+    if (session) {
+      router.replace('/dashboard');
+    }
+  }, [session, status, router]);
+
+  // If the session is loading, show loading state
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 to-white">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
+
+  // If session exists, don't render anything (will redirect)
+  if (session) {
+    return null;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
-
-    // Basic validation
-    if (!formData.email || !formData.password) {
-      setError('Please fill in all fields');
-      setLoading(false);
-      return;
-    }
+    setIsLoading(true);
 
     try {
-      // For demo purposes, let's use a simple credential check
-      if (formData.email === 'demo@billkaro.com' && formData.password === 'demo123') {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Store login state
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('user', JSON.stringify({ email: formData.email }));
-        
-        // Redirect to dashboard
-        router.push('/dashboard');
+      const result = await signIn('credentials', {
+        username: credentials.username,
+        password: credentials.password,
+        redirect: false,
+      });
+
+      if (result.error) {
+        setError('Invalid username or password');
       } else {
-        setError('Invalid credentials. Try demo@billkaro.com / demo123');
+        router.push('/dashboard');
       }
-    } catch (err) {
+    } catch (error) {
       setError('An error occurred. Please try again.');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
+    }
+  };
+
+  const handleDemoLogin = async () => {
+    setIsLoading(true);
+    try {
+      const result = await signIn('credentials', {
+        username: 'demo123',
+        password: 'demo123',
+        redirect: false,
+      });
+
+      if (!result.error) {
+        router.push('/dashboard');
+      }
+    } catch (error) {
+      setError('An error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <>
       <Head>
-        <title>Login | BillKaro</title>
+        <title>Sign In - BillKaro</title>
       </Head>
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 px-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3 }}
-          className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md"
-        >
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-center mb-8"
-          >
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome back</h1>
-            <p className="text-gray-500">Please sign in to continue</p>
-            {error && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="mt-2 text-red-500 text-sm"
-              >
-                {error}
-              </motion.p>
-            )}
-          </motion.div>
+      <div className="min-h-screen flex flex-col justify-center bg-gradient-to-br from-indigo-100 to-white py-12 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="flex justify-center">
+            <div className="w-20 h-20 relative">
+              <div className="absolute inset-0 bg-indigo-500 rounded-xl transform rotate-6"></div>
+              <div className="absolute inset-0 bg-indigo-600 rounded-xl transform -rotate-6"></div>
+              <div className="absolute inset-0 bg-white rounded-xl flex items-center justify-center">
+                <span className="text-2xl font-bold text-indigo-600">BK</span>
+              </div>
+            </div>
+          </div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Welcome to BillKaro
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Your complete financial management solution
+          </p>
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              type="email"
-              placeholder="Email address"
-              value={formData.email}
-              onChange={handleChange}
-              name="email"
-            />
-            <Input
-              type="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              name="password"
-            />
+        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="bg-white py-8 px-4 shadow-xl rounded-lg sm:px-10 border border-gray-100">
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              <div>
+                <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                  Username
+                </label>
+                <div className="mt-1">
+                  <input
+                    id="username"
+                    name="username"
+                    type="text"
+                    required
+                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    value={credentials.username}
+                    onChange={(e) =>
+                      setCredentials({ ...credentials, username: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
 
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="flex items-center justify-between mb-6"
-            >
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 text-blue-500 focus:ring-blue-400 border-gray-300 rounded"
-                />
-                <span className="ml-2 text-sm text-gray-600">Remember me</span>
-              </label>
-              <a
-                href="#"
-                className="text-sm text-blue-500 hover:text-blue-600 transition-colors"
-              >
-                Forgot password?
-              </a>
-            </motion.div>
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  Password
+                </label>
+                <div className="mt-1">
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    required
+                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    value={credentials.password}
+                    onChange={(e) =>
+                      setCredentials({ ...credentials, password: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
 
-            <motion.button
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-              type="submit"
-              disabled={loading}
-              className={`w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors duration-200 font-medium ${
-                loading ? 'opacity-70 cursor-not-allowed' : ''
-              }`}
-            >
-              {loading ? 'Signing in...' : 'Sign In'}
-            </motion.button>
-          </form>
+              {error && (
+                <div className="text-red-500 text-sm text-center bg-red-50 p-2 rounded">
+                  {error}
+                </div>
+              )}
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="mt-6 text-center text-gray-600 text-sm"
-          >
-            Don&apos;t have an account?{' '}
-            <a href="#" className="text-blue-500 hover:text-blue-600 font-medium">
-              Sign up
-            </a>
-          </motion.p>
-        </motion.div>
+              <div>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? 'Signing in...' : 'Sign in'}
+                </button>
+              </div>
+            </form>
+
+            <div className="mt-6">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">Or</span>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <button
+                  onClick={handleDemoLogin}
+                  disabled={isLoading}
+                  className="w-full flex justify-center py-2 px-4 border border-indigo-500 rounded-md shadow-sm text-sm font-medium text-indigo-600 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Try Demo Account
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </>
   );

@@ -12,6 +12,10 @@ function classNames(...classes) {
 export default function Navbar() {
   const { data: session } = useSession();
 
+  const handleLogout = async () => {
+    await signOut({ redirect: true, callbackUrl: '/login' });
+  };
+
   return (
     <Disclosure as="nav" className="bg-white shadow">
       {({ open }) => (
@@ -67,7 +71,7 @@ export default function Navbar() {
                         <Menu.Item>
                           {({ active }) => (
                             <button
-                              onClick={() => signOut()}
+                              onClick={handleLogout}
                               className={classNames(
                                 active ? 'bg-gray-100' : '',
                                 'block w-full px-4 py-2 text-left text-sm text-gray-700'
@@ -136,7 +140,7 @@ export default function Navbar() {
                     </Disclosure.Button>
                     <Disclosure.Button
                       as="button"
-                      onClick={() => signOut()}
+                      onClick={handleLogout}
                       className="block w-full px-4 py-2 text-left text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800"
                     >
                       Sign out
