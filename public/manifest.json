@@ -1,17 +1,21 @@
 {
-  "name": "BillKaro - Smart Financial Management Platform",
-  "short_name": "BillKaro",
+  "name": "Finance Project",
+  "short_name": "Finance",
   "description": "Manage your business finances with ease",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F8FAFC",
-  "theme_color": "#1D4ED8",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
   "icons": [
     {
-      "src": "/images/logo.svg",
-      "sizes": "48x48 72x72 96x96 128x128 256x256",
-      "type": "image/svg+xml",
-      "purpose": "any"
+      "src": "/favicon.svg",
+      "sizes": "32x32",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/logo.svg",
+      "sizes": "200x50",
+      "type": "image/svg+xml"
     }
   ]
 } 
