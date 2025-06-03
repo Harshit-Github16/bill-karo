@@ -12,7 +12,7 @@ import {
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: HomeIcon },
-  { name: 'Accounts', href: '/accounts', icon: UserGroupIcon },
+  { name: 'GST', href: '/gst-management', icon: UserGroupIcon },
   { name: 'Transactions', href: '/transactions', icon: CurrencyRupeeIcon },
   { name: 'Orders', href: '/orders', icon: DocumentTextIcon },
   { name: 'Reports', href: '/reports', icon: ChartBarIcon },

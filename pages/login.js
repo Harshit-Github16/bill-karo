@@ -3,6 +3,7 @@ import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Image from 'next/image';
+import Logo from '../components/Logo';
 
 export default function Login() {
   const { data: session, status } = useSession();
@@ -49,12 +50,12 @@ export default function Login() {
       });
 
       if (result.error) {
-        setError('Invalid username or password');
+        setError('Invalid username or password. Try using the demo account below.');
       } else {
         router.push('/dashboard');
       }
     } catch (error) {
-      setError('An error occurred. Please try again.');
+      setError('An error occurred. Please try again or use the demo account.');
     } finally {
       setIsLoading(false);
     }
@@ -62,6 +63,8 @@ export default function Login() {
 
   const handleDemoLogin = async () => {
     setIsLoading(true);
+    setError('');
+    
     try {
       const result = await signIn('credentials', {
         username: 'demo123',
@@ -69,11 +72,13 @@ export default function Login() {
         redirect: false,
       });
 
-      if (!result.error) {
+      if (result.error) {
+        setError('Demo login failed. Please try again or contact support.');
+      } else {
         router.push('/dashboard');
       }
     } catch (error) {
-      setError('An error occurred. Please try again.');
+      setError('An error occurred with demo login. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -87,18 +92,9 @@ export default function Login() {
       <div className="min-h-screen flex flex-col justify-center bg-gradient-to-br from-indigo-100 to-white py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <div className="flex justify-center">
-            <div className="w-20 h-20 relative">
-              <div className="absolute inset-0 bg-indigo-500 rounded-xl transform rotate-6"></div>
-              <div className="absolute inset-0 bg-indigo-600 rounded-xl transform -rotate-6"></div>
-              <div className="absolute inset-0 bg-white rounded-xl flex items-center justify-center">
-                <span className="text-2xl font-bold text-indigo-600">BK</span>
-              </div>
-            </div>
+            <Logo size="large" className="mb-3" />
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Welcome to BillKaro
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="text-center text-sm text-gray-600">
             Your complete financial management solution
           </p>
         </div>
@@ -177,8 +173,11 @@ export default function Login() {
                   disabled={isLoading}
                   className="w-full flex justify-center py-2 px-4 border border-indigo-500 rounded-md shadow-sm text-sm font-medium text-indigo-600 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Try Demo Account
+                  {isLoading ? 'Logging in...' : 'Try Demo Account (Recommended)'}
                 </button>
+                <p className="mt-2 text-xs text-center text-gray-500">
+                  Use the demo account to explore all features without registration
+                </p>
               </div>
             </div>
           </div>

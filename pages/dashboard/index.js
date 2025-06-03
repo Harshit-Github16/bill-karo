@@ -1,215 +1,294 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import DashboardLayout from '../../components/DashboardLayout';
-import { motion } from 'framer-motion';
+import { useRouter } from 'next/router';
 import {
-  BanknotesIcon,
-  DocumentTextIcon,
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
-  PlusIcon,
-  DocumentDuplicateIcon,
-  CurrencyRupeeIcon,
-  ReceiptPercentIcon,
-} from '@heroicons/react/24/outline';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
   Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
-import WelcomeModal from '../../components/WelcomeModal';
+  Legend,
+  ArcElement,
+} from 'chart.js';
+import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import DashboardLayout from '../../components/DashboardLayout';
+
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement
+);
 
 const stats = [
   {
-    name: 'Total Revenue',
-    value: '₹2,45,000',
-    change: '+12.5%',
-    trend: 'up',
-    icon: BanknotesIcon,
+    title: 'Total Balance',
+    value: '₹2,81,250',
+    change: '+₹12,500',
+    changeType: 'increase',
+    duration: 'since last month'
   },
   {
-    name: 'Total Expenses',
-    value: '₹1,75,000',
-    change: '+8.2%',
-    trend: 'up',
-    icon: ArrowTrendingDownIcon,
+    title: 'Total Expenses',
+    value: '₹48,250',
+    change: '-₹3,200',
+    changeType: 'decrease',
+    duration: 'since last month'
   },
   {
-    name: 'Pending Invoices',
-    value: '12',
-    change: '-2.4%',
-    trend: 'down',
-    icon: DocumentTextIcon,
+    title: 'Total Income',
+    value: '₹1,25,000',
+    change: '+₹15,000',
+    changeType: 'increase',
+    duration: 'since last month'
   },
   {
-    name: 'Net Profit',
-    value: '₹70,000',
-    change: '+18.9%',
-    trend: 'up',
-    icon: ArrowTrendingUpIcon,
-  },
+    title: 'Active Orders',
+    value: '23',
+    change: '+5',
+    changeType: 'increase',
+    duration: 'since last week'
+  }
 ];
 
-const revenueData = [
-  { month: 'Jan', revenue: 180000, expenses: 120000 },
-  { month: 'Feb', revenue: 220000, expenses: 150000 },
-  { month: 'Mar', revenue: 245000, expenses: 175000 },
+const recentTransactions = [
+  {
+    id: 1,
+    description: 'Office Supplies Purchase',
+    amount: '₹2,500',
+    type: 'expense',
+    date: '2024-03-15',
+    status: 'completed'
+  },
+  {
+    id: 2,
+    description: 'Client Payment - ABC Corp',
+    amount: '₹45,000',
+    type: 'income',
+    date: '2024-03-14',
+    status: 'completed'
+  },
+  {
+    id: 3,
+    description: 'Utility Bills',
+    amount: '₹3,750',
+    type: 'expense',
+    date: '2024-03-14',
+    status: 'pending'
+  },
+  {
+    id: 4,
+    description: 'Freelance Project Payment',
+    amount: '₹25,000',
+    type: 'income',
+    date: '2024-03-13',
+    status: 'completed'
+  },
+  {
+    id: 5,
+    description: 'Marketing Expenses',
+    amount: '₹12,000',
+    type: 'expense',
+    date: '2024-03-13',
+    status: 'completed'
+  }
 ];
 
-const quickActions = [
+const activityFeed = [
   {
-    name: 'Create Invoice',
-    description: 'Generate a new invoice for your clients',
-    icon: DocumentDuplicateIcon,
-    href: '/dashboard/invoices',
+    id: 1,
+    description: 'New order received from Rahul Sharma',
+    timestamp: '2 hours ago',
+    type: 'order'
   },
   {
-    name: 'Add Expense',
-    description: 'Record a new business expense',
-    icon: CurrencyRupeeIcon,
-    href: '/dashboard/expenses',
+    id: 2,
+    description: 'Payment received for Invoice #INV-2024-001',
+    timestamp: '4 hours ago',
+    type: 'payment'
   },
   {
-    name: 'File GST',
-    description: 'Submit your GST returns',
-    icon: ReceiptPercentIcon,
-    href: '/dashboard/gst',
+    id: 3,
+    description: 'New expense recorded for Office Supplies',
+    timestamp: '5 hours ago',
+    type: 'expense'
   },
+  {
+    id: 4,
+    description: 'Bank account balance updated',
+    timestamp: '1 day ago',
+    type: 'update'
+  },
+  {
+    id: 5,
+    description: 'Monthly financial report generated',
+    timestamp: '1 day ago',
+    type: 'report'
+  }
 ];
-
-function Stats() {
-  return (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-      {stats.map((stat) => (
-        <div
-          key={stat.name}
-          className="relative bg-white pt-5 px-4 pb-12 sm:pt-6 sm:px-6 shadow rounded-lg overflow-hidden"
-        >
-          <dt>
-            <div className="absolute bg-blue-500 rounded-md p-3">
-              <stat.icon className="h-6 w-6 text-white" aria-hidden="true" />
-            </div>
-            <p className="ml-16 text-sm font-medium text-gray-500 truncate">{stat.name}</p>
-          </dt>
-          <dd className="ml-16 pb-6 flex items-baseline sm:pb-7">
-            <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
-            <p
-              className={`ml-2 flex items-baseline text-sm font-semibold ${
-                stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
-              }`}
-            >
-              {stat.change}
-            </p>
-          </dd>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function RevenueChart() {
-  return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Revenue vs Expenses</h3>
-      <div className="h-80">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={revenueData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
-            <YAxis tickFormatter={(value) => `₹${value / 1000}k`} />
-            <Tooltip formatter={(value) => `₹${value.toLocaleString()}`} />
-            <Line
-              type="monotone"
-              dataKey="revenue"
-              stroke="#3B82F6"
-              strokeWidth={2}
-              name="Revenue"
-            />
-            <Line
-              type="monotone"
-              dataKey="expenses"
-              stroke="#EF4444"
-              strokeWidth={2}
-              name="Expenses"
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
-  );
-}
-
-function QuickActions() {
-  return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {quickActions.map((action) => (
-          <motion.a
-            key={action.name}
-            href={action.href}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="relative rounded-lg border border-gray-200 p-6 flex items-center space-x-3 hover:border-gray-400 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
-          >
-            <div className="flex-shrink-0">
-              <action.icon className="h-6 w-6 text-gray-600" aria-hidden="true" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <span className="absolute inset-0" aria-hidden="true" />
-              <p className="text-base font-medium text-gray-900">{action.name}</p>
-              <p className="text-sm text-gray-500">{action.description}</p>
-            </div>
-          </motion.a>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 export default function Dashboard() {
-  const { data: session } = useSession();
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
   useEffect(() => {
-    if (session?.user?.isFirstLogin) {
-      setShowWelcomeModal(true);
-      // Update user's isFirstLogin status
-      fetch('/api/users/welcome', {
-        method: 'POST',
-      });
+    if (status === 'loading') return;
+    if (!session) {
+      router.replace('/login');
     }
-  }, [session]);
+  }, [session, status, router]);
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return null;
+  }
+
+  // Dummy data for expenses over time
+  const expenseData = {
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    datasets: [
+      {
+        label: 'Monthly Expenses',
+        data: [3000, 2500, 4000, 3500, 5000, 4500],
+        borderColor: 'rgb(75, 192, 192)',
+        tension: 0.1,
+        fill: false,
+      },
+    ],
+  };
+
+  // Dummy data for expense categories
+  const categoryData = {
+    labels: ['Food', 'Transport', 'Shopping', 'Bills', 'Entertainment'],
+    datasets: [
+      {
+        data: [30, 20, 25, 15, 10],
+        backgroundColor: [
+          '#FF6384',
+          '#36A2EB',
+          '#FFCE56',
+          '#4BC0C0',
+          '#9966FF',
+        ],
+      },
+    ],
+  };
+
+  // Dummy data for income vs expense
+  const comparisonData = {
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    datasets: [
+      {
+        label: 'Income',
+        data: [6000, 5500, 7000, 6500, 8000, 7500],
+        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+      },
+      {
+        label: 'Expenses',
+        data: [3000, 2500, 4000, 3500, 5000, 4500],
+        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+      },
+    ],
+  };
 
   return (
-    <DashboardLayout
-      title="Dashboard"
-      description="Overview of your business finances"
-    >
+    <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="mt-2 text-sm text-gray-700">
-            Welcome back! Here's an overview of your business finances
-          </p>
+        <div className="bg-white rounded-lg p-6">
+          <h1 className="text-2xl font-semibold">Welcome back, Demo User! 👋</h1>
+          <p className="text-gray-600 mt-1">Here's what's happening with your finances today.</p>
         </div>
 
-        <Stats />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Total Balance Card */}
+          <div className="bg-white rounded-lg p-6">
+            <div className="flex items-center mb-4">
+              <div className="p-2 bg-[#0284C7] rounded-lg">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+              </div>
+            </div>
+            <h3 className="text-gray-500 text-sm font-medium">Total Balance</h3>
+            <div className="flex items-baseline">
+              <p className="text-2xl font-semibold text-gray-900">₹24,500</p>
+              <span className="ml-2 text-sm text-green-600">+4.75%</span>
+            </div>
+          </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <RevenueChart />
-          <QuickActions />
+          {/* Total Expenses Card */}
+          <div className="bg-white rounded-lg p-6">
+            <div className="flex items-center mb-4">
+              <div className="p-2 bg-[#0284C7] rounded-lg">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+            </div>
+            <h3 className="text-gray-500 text-sm font-medium">Total Expenses</h3>
+            <div className="flex items-baseline">
+              <p className="text-2xl font-semibold text-gray-900">₹8,320</p>
+              <span className="ml-2 text-sm text-red-600">-3.2%</span>
+            </div>
+          </div>
+
+          {/* Total Savings Card */}
+          <div className="bg-white rounded-lg p-6">
+            <div className="flex items-center mb-4">
+              <div className="p-2 bg-[#0284C7] rounded-lg">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+              </div>
+            </div>
+            <h3 className="text-gray-500 text-sm font-medium">Total Savings</h3>
+            <div className="flex items-baseline">
+              <p className="text-2xl font-semibold text-gray-900">₹16,180</p>
+              <span className="ml-2 text-sm text-green-600">+12.5%</span>
+            </div>
+          </div>
+
+          {/* Monthly Growth Card */}
+          <div className="bg-white rounded-lg p-6">
+            <div className="flex items-center mb-4">
+              <div className="p-2 bg-[#0284C7] rounded-lg">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+              </div>
+            </div>
+            <h3 className="text-gray-500 text-sm font-medium">Monthly Growth</h3>
+            <div className="flex items-baseline">
+              <p className="text-2xl font-semibold text-gray-900">+₹2,300</p>
+              <span className="ml-2 text-sm text-green-600">+18.3%</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Activity Section */}
+        <div className="bg-white rounded-lg p-6">
+          <h2 className="text-lg font-medium mb-4">Recent Activity</h2>
+          <div className="text-gray-600">
+            No recent activity to show.
+          </div>
         </div>
       </div>
-
-      <WelcomeModal
-        isOpen={showWelcomeModal}
-        onClose={() => setShowWelcomeModal(false)}
-      />
     </DashboardLayout>
   );
 } 

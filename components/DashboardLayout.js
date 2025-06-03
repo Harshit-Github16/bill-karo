@@ -1,221 +1,81 @@
 import { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import {
-  Bars3Icon,
-  XMarkIcon,
-  HomeIcon,
-  DocumentDuplicateIcon,
-  CalculatorIcon,
-  BanknotesIcon,
-  Cog6ToothIcon,
-  UserGroupIcon,
-  ChartBarIcon,
-  TruckIcon,
-} from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import Head from 'next/head';
-import { getMetaData } from '../config/meta';
+import { useSession, signOut } from 'next-auth/react';
+import Logo from './Logo';
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-  { name: 'Invoices', href: '/dashboard/invoices', icon: DocumentDuplicateIcon },
-  { name: 'GST', href: '/dashboard/gst', icon: CalculatorIcon },
-  { name: 'Expenses', href: '/dashboard/expenses', icon: BanknotesIcon },
-  { name: 'Accounts', href: '/dashboard/accounts', icon: UserGroupIcon },
-  { name: 'Orders', href: '/dashboard/orders', icon: TruckIcon },
-  { name: 'Reports', href: '/dashboard/reports', icon: ChartBarIcon },
-  { name: 'Settings', href: '/dashboard/settings', icon: Cog6ToothIcon },
+  { name: 'Dashboard', href: '/dashboard', icon: <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" /></svg> },
+  {
+    name: 'GST',
+    href: '/dashboard/gst-management',
+    icon: 
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 14h6m-3-3v6m4.5-13.5l-1.5-1.5H6.75A1.75 1.75 0 005 6.75v10.5A1.75 1.75 0 006.75 19h10.5A1.75 1.75 0 0019 17.25V7.5l-1.5-1.5z" />
+      </svg>
+    
+  },
+  
+  { name: 'Expenses', href: '/dashboard/expenses', icon: <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg> },
+  { name: 'Reports', href: '/dashboard/reports', icon: <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4zm2 2H5V5h14v14zm0-16H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg> },
+  { name: 'Orders', href: '/dashboard/orders', icon: <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2z"/></svg> },
+  { name: 'Cash Flow', href: '/dashboard/cash-flow', icon: <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg> },
+  { name: 'Settings', href: '/dashboard/settings', icon: <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg> }
 ];
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
 }
 
-export default function DashboardLayout({ children, title, description }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+export default function DashboardLayout({ children }) {
   const router = useRouter();
-  const meta = getMetaData({ title, description });
+  const { data: session } = useSession();
 
   return (
-    <>
-      <Head>
-        <title>{meta.title}</title>
-        <meta name="description" content={meta.description} />
-      </Head>
-      
-      <div>
-        <Transition.Root show={sidebarOpen} as={Fragment}>
-          <Dialog as="div" className="relative z-50 lg:hidden" onClose={setSidebarOpen}>
-            <Transition.Child
-              as={Fragment}
-              enter="transition-opacity ease-linear duration-300"
-              enterFrom="opacity-0"
-              enterTo="opacity-100"
-              leave="transition-opacity ease-linear duration-300"
-              leaveFrom="opacity-100"
-              leaveTo="opacity-0"
-            >
-              <div className="fixed inset-0 bg-gray-900/80" />
-            </Transition.Child>
-
-            <div className="fixed inset-0 flex">
-              <Transition.Child
-                as={Fragment}
-                enter="transition ease-in-out duration-300 transform"
-                enterFrom="-translate-x-full"
-                enterTo="translate-x-0"
-                leave="transition ease-in-out duration-300 transform"
-                leaveFrom="translate-x-0"
-                leaveTo="-translate-x-full"
+    <div className="min-h-screen bg-gray-50">
+      {/* Sidebar */}
+      <div className="fixed inset-y-0 left-0 w-64 bg-white border-r">
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-center h-16 border-b px-4">
+            <Logo size="default" />
+          </div>
+          <nav className="flex-1 p-4 space-y-1">
+            {navigation.map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`flex items-center px-4 py-2 text-sm rounded-lg ${
+                  router.pathname === item.href
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
               >
-                <Dialog.Panel className="relative mr-16 flex w-full max-w-xs flex-1">
-                  <Transition.Child
-                    as={Fragment}
-                    enter="ease-in-out duration-300"
-                    enterFrom="opacity-0"
-                    enterTo="opacity-100"
-                    leave="ease-in-out duration-300"
-                    leaveFrom="opacity-100"
-                    leaveTo="opacity-0"
-                  >
-                    <div className="absolute left-full top-0 flex w-16 justify-center pt-5">
-                      <button type="button" className="-m-2.5 p-2.5" onClick={() => setSidebarOpen(false)}>
-                        <span className="sr-only">Close sidebar</span>
-                        <XMarkIcon className="h-6 w-6 text-white" aria-hidden="true" />
-                      </button>
-                    </div>
-                  </Transition.Child>
-                  
-                  <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white px-6 pb-4">
-                    <div className="flex h-16 shrink-0 items-center">
-                      <img
-                        className="h-8 w-auto"
-                        src="/logo.svg"
-                        alt="BillKaro"
-                      />
-                    </div>
-                    <nav className="flex flex-1 flex-col">
-                      <ul role="list" className="flex flex-1 flex-col gap-y-7">
-                        <li>
-                          <ul role="list" className="-mx-2 space-y-1">
-                            {navigation.map((item) => (
-                              <li key={item.name}>
-                                <Link
-                                  href={item.href}
-                                  className={classNames(
-                                    router.pathname === item.href
-                                      ? 'bg-gray-50 text-blue-600'
-                                      : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50',
-                                    'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold'
-                                  )}
-                                >
-                                  <item.icon
-                                    className={classNames(
-                                      router.pathname === item.href ? 'text-blue-600' : 'text-gray-400 group-hover:text-blue-600',
-                                      'h-6 w-6 shrink-0'
-                                    )}
-                                    aria-hidden="true"
-                                  />
-                                  {item.name}
-                                </Link>
-                              </li>
-                            ))}
-                          </ul>
-                        </li>
-                      </ul>
-                    </nav>
-                  </div>
-                </Dialog.Panel>
-              </Transition.Child>
-            </div>
-          </Dialog>
-        </Transition.Root>
-
-        {/* Static sidebar for desktop */}
-        <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
-          <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white px-6 pb-4">
-            <div className="flex h-16 shrink-0 items-center">
-              <img
-                className="h-8 w-auto"
-                src="/logo.svg"
-                alt="BillKaro"
-              />
-            </div>
-            <nav className="flex flex-1 flex-col">
-              <ul role="list" className="flex flex-1 flex-col gap-y-7">
-                <li>
-                  <ul role="list" className="-mx-2 space-y-1">
-                    {navigation.map((item) => (
-                      <li key={item.name}>
-                        <Link
-                          href={item.href}
-                          className={classNames(
-                            router.pathname === item.href
-                              ? 'bg-gray-50 text-blue-600'
-                              : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50',
-                            'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold'
-                          )}
-                        >
-                          <item.icon
-                            className={classNames(
-                              router.pathname === item.href ? 'text-blue-600' : 'text-gray-400 group-hover:text-blue-600',
-                              'h-6 w-6 shrink-0'
-                            )}
-                            aria-hidden="true"
-                          />
-                          {item.name}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </li>
-              </ul>
-            </nav>
-          </div>
-        </div>
-
-        <div className="lg:pl-72">
-          <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
-            <button type="button" className="-m-2.5 p-2.5 text-gray-700 lg:hidden" onClick={() => setSidebarOpen(true)}>
-              <span className="sr-only">Open sidebar</span>
-              <Bars3Icon className="h-6 w-6" aria-hidden="true" />
+                <span className="mr-3">{item.icon}</span>
+                {item.name}
+              </Link>
+            ))}
+          </nav>
+          <div className="p-4 border-t">
+            <button
+              onClick={() => signOut()}
+              className="flex items-center w-full px-4 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-50"
+            >
+              <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
+              </svg>
+              Sign Out
             </button>
-
-            {/* Separator */}
-            <div className="h-6 w-px bg-gray-200 lg:hidden" aria-hidden="true" />
-
-            <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-              <div className="flex flex-1"></div>
-              <div className="flex items-center gap-x-4 lg:gap-x-6">
-                {/* Profile dropdown */}
-                <button
-                  type="button"
-                  className="-m-1.5 flex items-center p-1.5"
-                >
-                  <span className="sr-only">Open user menu</span>
-                  <img
-                    className="h-8 w-8 rounded-full bg-gray-50"
-                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                    alt=""
-                  />
-                  <span className="hidden lg:flex lg:items-center">
-                    <span className="ml-4 text-sm font-semibold leading-6 text-gray-900" aria-hidden="true">
-                      Demo User
-                    </span>
-                  </span>
-                </button>
-              </div>
-            </div>
           </div>
-
-          <main className="py-10">
-            <div className="px-2 sm:px-4 lg:px-6">
-              {children}
-            </div>
-          </main>
         </div>
       </div>
-    </>
+
+      {/* Main Content */}
+      <div className="pl-64">
+        <main className="p-8">
+          {children}
+        </main>
+      </div>
+    </div>
   );
 } 

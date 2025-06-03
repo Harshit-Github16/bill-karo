@@ -1,67 +1,65 @@
 import React from 'react';
 import Link from 'next/link';
 
-export default function Logo({ className = '', size = 'default', withTagline = false, asLink = false }) {
+export default function Logo({ className = '', size = 'default' }) {
   const sizeClasses = {
     small: 'h-6',
     default: 'h-8',
-    large: 'h-10',
-    xl: 'h-12'
+    large: 'h-10'
   };
 
-  const LogoContent = () => (
+  return (
     <div className={`flex items-center ${className}`}>
-      <div className="relative">
-        <div className="flex items-center">
-          {/* Logo SVG */}
-          <div className="relative">
-            <svg
-              className={`${sizeClasses[size]} w-auto`}
-              viewBox="0 0 120 40"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              {/* Background Shape */}
-              <path
-                d="M20 0H100C111.046 0 120 8.95431 120 20C120 31.0457 111.046 40 100 40H20C8.95431 40 0 31.0457 0 20C0 8.95431 8.95431 0 20 0Z"
-                fill="#4F46E5"
-                className="text-indigo-600"
-              />
-              
-              {/* Rupee Symbol */}
-              <path
-                d="M22 12H32M22 17H32M25 28L31 12M22 22H31C32.6569 22 34 20.6569 34 19C34 17.3431 32.6569 16 31 16H22"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-
-              {/* Text */}
-              <text x="42" y="26" className="text-2xl font-bold" fill="currentColor">
-                <tspan fill="#1F2937">Bill</tspan>
-                <tspan fill="#4F46E5">Karo</tspan>
-              </text>
-            </svg>
-
-            {withTagline && (
-              <div className="absolute -bottom-4 left-0 w-full text-center">
-                <span className="text-xs text-gray-500 tracking-wider">Financial Management</span>
-              </div>
-            )}
+      <div className="flex items-center space-x-2">
+        <div className="relative">
+          <svg
+            className={`${sizeClasses[size]} text-indigo-600`}
+            viewBox="0 0 32 32"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            {/* Background Circle */}
+            <circle cx="16" cy="16" r="16" className="fill-current" />
+            
+            {/* Bill Icon */}
+            <path
+              d="M10 8H22C22.5523 8 23 8.44772 23 9V23C23 23.5523 22.5523 24 22 24H10C9.44772 24 9 23.5523 9 23V9C9 8.44772 9.44772 8 10 8Z"
+              fill="white"
+            />
+            
+            {/* Lines representing text */}
+            <path
+              d="M12 12H20M12 16H20M12 20H16"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            
+            {/* Rupee Symbol Overlay */}
+            <path
+              d="M19 13.5H15M19 13.5H21M19 13.5V19.5M15 15.5H21M15 17.5H21"
+              stroke="white"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
+        <div className="flex flex-col">
+          <div className="flex items-baseline">
+            <span className={`font-bold ${size === 'small' ? 'text-lg' : 'text-2xl'} bg-gradient-to-r from-indigo-600 to-indigo-800 bg-clip-text text-transparent`}>
+              Bill
+            </span>
+            <span className={`font-bold ${size === 'small' ? 'text-lg' : 'text-2xl'} bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent ml-1`}>
+              Karo
+            </span>
           </div>
+          <span className={`text-xs font-medium text-gray-600 tracking-wider ${size === 'small' ? 'hidden' : ''}`}>
+            Billing Made Simple
+          </span>
         </div>
       </div>
     </div>
   );
-
-  if (asLink) {
-    return (
-      <Link href="/dashboard" className="inline-block">
-        <LogoContent />
-      </Link>
-    );
-  }
-
-  return <LogoContent />;
 } 

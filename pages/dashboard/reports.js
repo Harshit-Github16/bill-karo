@@ -47,7 +47,8 @@ export default function Reports() {
             <h1 className="text-2xl font-bold text-gray-900">Reports & Analytics</h1>
             <p className="text-sm text-gray-600">Visual overview of your financial health</p>
           </div>
-          <select value={timeframe} onChange={e => setTimeframe(e.target.value)} className="rounded-md border-gray-300 text-sm px-3 py-2 focus:ring-2 focus:ring-blue-500">
+          <select value={timeframe} onChange={e => setTimeframe(e.target.value)} className="rounded-md border-gray-300
+           text-sm px-3 py-2 focus:ring-2 focus:ring-blue-500 w-36">
             <option value="1M">Last Month</option>
             <option value="3M">Last 3 Months</option>
             <option value="6M">Last 6 Months</option>
