@@ -1,3 +1,5 @@
+'use client'; // Required for client-side features like useState and useSession
+
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -10,7 +12,8 @@ import {
   ClipboardDocumentListIcon,
   ArrowTrendingUpIcon,
   Cog6ToothIcon,
-  XMarkIcon
+  XMarkIcon,
+  Bars3Icon, // Added for hamburger menu
 } from '@heroicons/react/24/outline';
 import Logo from './Logo';
 
@@ -21,7 +24,7 @@ const navigation = [
   { name: 'Reports', href: '/dashboard/reports', icon: DocumentTextIcon },
   { name: 'Orders', href: '/dashboard/orders', icon: ClipboardDocumentListIcon },
   { name: 'Cash Flow', href: '/dashboard/cash-flow', icon: ArrowTrendingUpIcon },
-  { name: 'Settings', href: '/dashboard/settings', icon: Cog6ToothIcon }
+  { name: 'Settings', href: '/dashboard/settings', icon: Cog6ToothIcon },
 ];
 
 export default function DashboardLayout({ children }) {
@@ -46,7 +49,6 @@ export default function DashboardLayout({ children }) {
           </Link>
         </li>
       ))}
-
     </ul>
   );
 
@@ -58,7 +60,11 @@ export default function DashboardLayout({ children }) {
       )}
 
       {/* Mobile sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-white lg:hidden transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out`}>
+      <div
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white lg:hidden transform ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } transition-transform duration-300 ease-in-out`}
+      >
         <div className="flex h-16 items-center justify-between px-6 border-b border-gray-200">
           <Link href="/" className="flex items-center space-x-2">
             <Logo size="small" />
@@ -84,14 +90,31 @@ export default function DashboardLayout({ children }) {
         </nav>
       </div>
 
+      {/* Top Navbar */}
+      <header className="lg:pl-56 bg-white border-b border-gray-200">
+        <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+          {/* Left: Mobile menu toggle and title */}
+          <div className="flex items-center">
+            <button
+              className="p-2 text-gray-700 lg:hidden"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Bars3Icon className="h-6 w-6" />
+            </button>
+            <h1 className="ml-2 text-lg font-semibold text-gray-900">My Dashboard</h1>
+          </div>
+
+          {/* Right: User info and sign-out */}
+          
+        </div>
+      </header>
+
       {/* Main content */}
       <div className="lg:pl-56">
         <main className="py-10">
-          <div className="px-4 sm:px-6 lg:px-8">
-            {children}
-          </div>
+          <div className="px-4 sm:px-6 lg:px-8">{children}</div>
         </main>
       </div>
     </div>
   );
-} 
+}

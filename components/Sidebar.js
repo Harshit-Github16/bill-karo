@@ -56,6 +56,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
         </div>
         <nav className="flex flex-1 flex-col py-4">
           <NavList />
+          Hello
         </nav>
       </div>
 
