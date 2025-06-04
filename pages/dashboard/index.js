@@ -1,291 +1,219 @@
-import { useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/router';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
-} from 'chart.js';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import { useState } from 'react';
+import Head from 'next/head';
 import DashboardLayout from '../../components/DashboardLayout';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  LineChart, Line, PieChart, Pie, Cell
+} from 'recharts';
+import { 
+  CurrencyRupeeIcon, DocumentTextIcon, ChartBarIcon, 
+  ArrowTrendingUpIcon, ExclamationCircleIcon, CheckCircleIcon 
+} from '@heroicons/react/24/outline';
 
-// Register ChartJS components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement
-);
-
-const stats = [
-  {
-    title: 'Total Balance',
-    value: '₹2,81,250',
-    change: '+₹12,500',
-    changeType: 'increase',
-    duration: 'since last month'
-  },
-  {
-    title: 'Total Expenses',
-    value: '₹48,250',
-    change: '-₹3,200',
-    changeType: 'decrease',
-    duration: 'since last month'
-  },
-  {
-    title: 'Total Income',
-    value: '₹1,25,000',
-    change: '+₹15,000',
-    changeType: 'increase',
-    duration: 'since last month'
-  },
-  {
-    title: 'Active Orders',
-    value: '23',
-    change: '+5',
-    changeType: 'increase',
-    duration: 'since last week'
-  }
+// Sample data - Replace with real data from your API
+const monthlyRevenue = [
+  { month: 'Jan', amount: 125000 },
+  { month: 'Feb', amount: 165000 },
+  { month: 'Mar', amount: 145000 },
+  { month: 'Apr', amount: 185000 },
+  { month: 'May', amount: 155000 },
+  { month: 'Jun', amount: 190000 },
 ];
 
-const recentTransactions = [
-  {
-    id: 1,
-    description: 'Office Supplies Purchase',
-    amount: '₹2,500',
-    type: 'expense',
-    date: '2024-03-15',
-    status: 'completed'
-  },
-  {
-    id: 2,
-    description: 'Client Payment - ABC Corp',
-    amount: '₹45,000',
-    type: 'income',
-    date: '2024-03-14',
-    status: 'completed'
-  },
-  {
-    id: 3,
-    description: 'Utility Bills',
-    amount: '₹3,750',
-    type: 'expense',
-    date: '2024-03-14',
-    status: 'pending'
-  },
-  {
-    id: 4,
-    description: 'Freelance Project Payment',
-    amount: '₹25,000',
-    type: 'income',
-    date: '2024-03-13',
-    status: 'completed'
-  },
-  {
-    id: 5,
-    description: 'Marketing Expenses',
-    amount: '₹12,000',
-    type: 'expense',
-    date: '2024-03-13',
-    status: 'completed'
-  }
+const gstData = [
+  { name: 'CGST', value: 25000 },
+  { name: 'SGST', value: 25000 },
+  { name: 'IGST', value: 35000 },
 ];
 
-const activityFeed = [
-  {
-    id: 1,
-    description: 'New order received from Rahul Sharma',
-    timestamp: '2 hours ago',
-    type: 'order'
-  },
-  {
-    id: 2,
-    description: 'Payment received for Invoice #INV-2024-001',
-    timestamp: '4 hours ago',
-    type: 'payment'
-  },
-  {
-    id: 3,
-    description: 'New expense recorded for Office Supplies',
-    timestamp: '5 hours ago',
-    type: 'expense'
-  },
-  {
-    id: 4,
-    description: 'Bank account balance updated',
-    timestamp: '1 day ago',
-    type: 'update'
-  },
-  {
-    id: 5,
-    description: 'Monthly financial report generated',
-    timestamp: '1 day ago',
-    type: 'report'
-  }
+const recentInvoices = [
+  { id: 'INV001', customer: 'Tech Solutions Ltd', amount: 45000, status: 'PAID', date: '2024-03-15' },
+  { id: 'INV002', customer: 'Global Traders', amount: 32000, status: 'PENDING', date: '2024-03-14' },
+  { id: 'INV003', customer: 'Innovative Systems', amount: 28000, status: 'PAID', date: '2024-03-13' },
+  { id: 'INV004', customer: 'Prime Industries', amount: 56000, status: 'OVERDUE', date: '2024-03-10' },
+  { id: 'INV005', customer: 'Digital Services', amount: 41000, status: 'PAID', date: '2024-03-09' },
 ];
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28'];
 
 export default function Dashboard() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
+  const [selectedPeriod, setSelectedPeriod] = useState('month');
 
-  useEffect(() => {
-    if (status === 'loading') return;
-    if (!session) {
-      router.replace('/login');
-    }
-  }, [session, status, router]);
-
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+  const StatCard = ({ title, value, icon: Icon, trend, color }) => (
+    <div className="bg-white rounded-lg shadow p-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-gray-600">{title}</p>
+          <p className="mt-2 text-3xl font-semibold text-gray-900">{value}</p>
+          {trend && (
+            <p className={`mt-2 text-sm ${trend >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {trend >= 0 ? '↑' : '↓'} {Math.abs(trend)}% from last month
+            </p>
+          )}
+        </div>
+        <div className={`p-3 rounded-full ${color}`}>
+          <Icon className="w-6 h-6 text-white" />
+        </div>
       </div>
-    );
-  }
-
-  if (!session) {
-    return null;
-  }
-
-  // Dummy data for expenses over time
-  const expenseData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    datasets: [
-      {
-        label: 'Monthly Expenses',
-        data: [3000, 2500, 4000, 3500, 5000, 4500],
-        borderColor: 'rgb(75, 192, 192)',
-        tension: 0.1,
-        fill: false,
-      },
-    ],
-  };
-
-  // Dummy data for expense categories
-  const categoryData = {
-    labels: ['Food', 'Transport', 'Shopping', 'Bills', 'Entertainment'],
-    datasets: [
-      {
-        data: [30, 20, 25, 15, 10],
-        backgroundColor: [
-          '#FF6384',
-          '#36A2EB',
-          '#FFCE56',
-          '#4BC0C0',
-          '#9966FF',
-        ],
-      },
-    ],
-  };
-
-  // Dummy data for income vs expense
-  const comparisonData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    datasets: [
-      {
-        label: 'Income',
-        data: [6000, 5500, 7000, 6500, 8000, 7500],
-        backgroundColor: 'rgba(75, 192, 192, 0.5)',
-      },
-      {
-        label: 'Expenses',
-        data: [3000, 2500, 4000, 3500, 5000, 4500],
-        backgroundColor: 'rgba(255, 99, 132, 0.5)',
-      },
-    ],
-  };
+    </div>
+  );
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div className="bg-white rounded-lg p-6">
-          <h1 className="text-2xl font-semibold">Welcome back, Demo User! 👋</h1>
-          <p className="text-gray-600 mt-1">Here's what's happening with your finances today.</p>
+      <Head>
+        <title>Dashboard - BillKaro</title>
+      </Head>
+
+      <div className="py-4">
+        <div className="px-4">
+          <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Total Balance Card */}
-          <div className="bg-white rounded-lg p-6">
-            <div className="flex items-center mb-4">
-              <div className="p-2 bg-[#0284C7] rounded-lg">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                </svg>
+        <div className="px-4">
+          {/* Stats Grid */}
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard
+              title="Total Revenue"
+              value="₹9,65,000"
+              icon={CurrencyRupeeIcon}
+              trend={12.5}
+              color="bg-blue-500"
+            />
+            <StatCard
+              title="Total Invoices"
+              value="142"
+              icon={DocumentTextIcon}
+              trend={8.2}
+              color="bg-green-500"
+            />
+            <StatCard
+              title="Pending Amount"
+              value="₹1,25,000"
+              icon={ExclamationCircleIcon}
+              trend={-5.1}
+              color="bg-yellow-500"
+            />
+            <StatCard
+              title="GST Collected"
+              value="₹85,000"
+              icon={ChartBarIcon}
+              trend={15.3}
+              color="bg-purple-500"
+            />
+          </div>
+
+          {/* Charts Grid */}
+          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {/* Revenue Chart */}
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-medium text-gray-900">Revenue Overview</h2>
+                <select
+                  value={selectedPeriod}
+                  onChange={(e) => setSelectedPeriod(e.target.value)}
+                  className="rounded-md border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="month">Last 6 Months</option>
+                  <option value="quarter">Last 4 Quarters</option>
+                  <option value="year">Last 2 Years</option>
+                </select>
+              </div>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={monthlyRevenue}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="amount" name="Revenue" fill="#4F46E5" />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </div>
-            <h3 className="text-gray-500 text-sm font-medium">Total Balance</h3>
-            <div className="flex items-baseline">
-              <p className="text-2xl font-semibold text-gray-900">₹24,500</p>
-              <span className="ml-2 text-sm text-green-600">+4.75%</span>
+
+            {/* GST Distribution */}
+            <div className="bg-white rounded-lg shadow p-4">
+              <h2 className="text-lg font-medium text-gray-900 mb-4">GST Distribution</h2>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={gstData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, value }) => `${name}: ₹${value.toLocaleString()}`}
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {gstData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
 
-          {/* Total Expenses Card */}
-          <div className="bg-white rounded-lg p-6">
-            <div className="flex items-center mb-4">
-              <div className="p-2 bg-[#0284C7] rounded-lg">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
+          {/* Recent Invoices Table */}
+          <div className="mt-4 bg-white rounded-lg shadow">
+            <div className="px-4 py-3 border-b border-gray-200">
+              <h2 className="text-lg font-medium text-gray-900">Recent Invoices</h2>
             </div>
-            <h3 className="text-gray-500 text-sm font-medium">Total Expenses</h3>
-            <div className="flex items-baseline">
-              <p className="text-2xl font-semibold text-gray-900">₹8,320</p>
-              <span className="ml-2 text-sm text-red-600">-3.2%</span>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Invoice ID
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Customer
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Amount
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {recentInvoices.map((invoice) => (
+                    <tr key={invoice.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-blue-600">
+                        {invoice.id}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                        {invoice.customer}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                        ₹{invoice.amount.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                          ${invoice.status === 'PAID' ? 'bg-green-100 text-green-800' :
+                          invoice.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'}`}>
+                          {invoice.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(invoice.date).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          </div>
-
-          {/* Total Savings Card */}
-          <div className="bg-white rounded-lg p-6">
-            <div className="flex items-center mb-4">
-              <div className="p-2 bg-[#0284C7] rounded-lg">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                </svg>
-              </div>
-            </div>
-            <h3 className="text-gray-500 text-sm font-medium">Total Savings</h3>
-            <div className="flex items-baseline">
-              <p className="text-2xl font-semibold text-gray-900">₹16,180</p>
-              <span className="ml-2 text-sm text-green-600">+12.5%</span>
-            </div>
-          </div>
-
-          {/* Monthly Growth Card */}
-          <div className="bg-white rounded-lg p-6">
-            <div className="flex items-center mb-4">
-              <div className="p-2 bg-[#0284C7] rounded-lg">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                </svg>
-              </div>
-            </div>
-            <h3 className="text-gray-500 text-sm font-medium">Monthly Growth</h3>
-            <div className="flex items-baseline">
-              <p className="text-2xl font-semibold text-gray-900">+₹2,300</p>
-              <span className="ml-2 text-sm text-green-600">+18.3%</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Activity Section */}
-        <div className="bg-white rounded-lg p-6">
-          <h2 className="text-lg font-medium mb-4">Recent Activity</h2>
-          <div className="text-gray-600">
-            No recent activity to show.
           </div>
         </div>
       </div>

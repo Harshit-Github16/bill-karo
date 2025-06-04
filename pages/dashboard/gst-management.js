@@ -202,7 +202,7 @@ export default function GSTManagement() {
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="p-2 border rounded-lg"
+              className="p-2 border rounded-lg w-32"
             >
               <option>June 2024</option>
               <option>May 2024</option>

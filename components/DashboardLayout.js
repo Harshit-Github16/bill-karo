@@ -31,21 +31,22 @@ function classNames(...classes) {
 export default function DashboardLayout({ children }) {
   const router = useRouter();
   const { data: session } = useSession();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className="fixed inset-y-0 left-0 w-64 bg-white border-r">
+      <div className="fixed inset-y-0 left-0 w-56 bg-white border-r">
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-center h-16 border-b px-4">
+          <div className="flex items-center justify-center h-14 border-b px-4">
             <Logo size="default" />
           </div>
-          <nav className="flex-1 p-4 space-y-1">
+          <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex items-center px-4 py-2 text-sm rounded-lg ${
+                className={`flex items-center px-3 py-2 text-sm rounded-lg ${
                   router.pathname === item.href
                     ? 'bg-blue-50 text-blue-700'
                     : 'text-gray-600 hover:bg-gray-50'
@@ -56,10 +57,10 @@ export default function DashboardLayout({ children }) {
               </Link>
             ))}
           </nav>
-          <div className="p-4 border-t">
+          <div className="p-2 border-t">
             <button
               onClick={() => signOut()}
-              className="flex items-center w-full px-4 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-50"
+              className="flex items-center w-full px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-50"
             >
               <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
@@ -71,8 +72,8 @@ export default function DashboardLayout({ children }) {
       </div>
 
       {/* Main Content */}
-      <div className="pl-64">
-        <main className="p-8">
+      <div className="pl-56">
+        <main className="min-h-screen bg-gray-50">
           {children}
         </main>
       </div>

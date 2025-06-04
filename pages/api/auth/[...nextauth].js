@@ -10,13 +10,12 @@ export default NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        // Demo user credentials check
+        // Hardcoded demo user check
         if (credentials.username === "demo123" && credentials.password === "demo123") {
           return {
-            id: 1,
+            id: "1",
             name: "Demo User",
-            email: "demo@billkaro.com",
-            role: "demo"
+            email: "demo@billkaro.com"
           };
         }
         return null;
@@ -35,13 +34,13 @@ export default NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role;
+        token.id = user.id;
       }
       return token;
     },
     async session({ session, token }) {
       if (token) {
-        session.user.role = token.role;
+        session.user.id = token.id;
       }
       return session;
     },
