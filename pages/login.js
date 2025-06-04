@@ -1,38 +1,48 @@
-import { useState } from 'react';
-import { signIn } from 'next-auth/react';
+import { useState, useEffect } from 'react';
+import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Logo from '../components/Logo';
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
   const router = useRouter();
+  const { data: session, status } = useSession();
 
-  const handleDemoLogin = async () => {
+  useEffect(() => {
+    if (session) {
+      router.push('/dashboard');
+    }
+  }, [session, router]);
+
+  const handleDemoLogin = async (e) => {
+    e.preventDefault();
     setIsLoading(true);
-    setError('');
-    router.push('/dashboard');
+    
     try {
       const result = await signIn('credentials', {
         username: 'demo123',
         password: 'demo123',
-        redirect: false,
-        callbackUrl: '/dashboard'
+        redirect: false
       });
 
-      if (result?.error) {
-        setError('Login failed: ' + result.error);
-      } else {
+      if (!result?.error) {
         router.push('/dashboard');
       }
     } catch (error) {
-      setError('Something went wrong. Please try again.');
       console.error('Login error:', error);
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (status === 'loading' || session) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 to-white">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -54,27 +64,15 @@ export default function Login() {
 
         <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
           <div className="bg-white py-8 px-4 shadow-xl rounded-lg sm:px-10">
-            {/* {error && (
-              <div className="mb-4 text-red-500 text-sm text-center bg-red-50 p-3 rounded">
-                {error}
-              </div>
-            )} */}
-
-            <div className="space-y-4">
-              {/* <div className="text-center text-sm text-gray-600 mb-4">
-                <p className="font-semibold">Demo Login Credentials:</p>
-                <p>Username: demo123</p>
-                <p>Password: demo123</p>
-              </div> */}
-
+            <form onSubmit={handleDemoLogin} className="space-y-4">
               <button
-                onClick={handleDemoLogin}
+                type="submit"
                 disabled={isLoading}
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
               >
                 {isLoading ? 'Logging in...' : 'Login with Demo Account'}
               </button>
-            </div>
+            </form>
 
             <div className="mt-4 text-sm text-center text-gray-600">
               Click above to explore all features instantly

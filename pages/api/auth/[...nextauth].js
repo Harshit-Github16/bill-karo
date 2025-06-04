@@ -1,7 +1,7 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
-export default NextAuth({
+export const authOptions = {
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -22,7 +22,7 @@ export default NextAuth({
       }
     })
   ],
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || 'your-super-secret-key-here-minimum-32-chars',
   session: {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
@@ -43,9 +43,8 @@ export default NextAuth({
         session.user.id = token.id;
       }
       return session;
-    },
-    async redirect() {
-      return '/dashboard'
     }
   }
-}); 
+};
+
+export default NextAuth(authOptions); 
