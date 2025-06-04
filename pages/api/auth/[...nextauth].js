@@ -43,6 +43,10 @@ export const authOptions = {
         session.user.id = token.id;
       }
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      // Always redirect to dashboard after sign in
+      return baseUrl + '/dashboard';
     }
   }
 };
